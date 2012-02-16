@@ -1,0 +1,387 @@
+<html>
+	<head>
+		<title>SimpleRTS Manual</title>
+		<style>
+			.definition {
+				padding-left: 2em;
+				display: block;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>SimpleRTS Manual</h1>
+		<h4>version 1.05c</h4>
+		<hr/>
+		<h2>Table of Contents</h2>
+		<ol>
+			<li><a href="#Introduction">Introduction</a></li>
+			<li><a href="#Revisions">Revision History</a></li>
+			<li><a href="#Run">How to Run</a></li>
+			<li><a href="#Config">Configuration</a>
+			<li><a href="#VisualAgent">Visual Agent and Unit Overview</a>
+			<li><a href="#Agent">Writing An Agent</a>
+			<li><a href="#FogofWar">Making Maps</a>
+			<li><a href="#ScripAgent">Using The Scripted Agent</a>
+			<li><a href="#Engine">The Engine</a>
+			<li><a href="#FogofWar">Partial Observability</a>
+			<li><a href="#Matlab">MATLAB-Specific Notes</a>
+			<li><a href="#Contact">Contact Info</a></li>
+		</ol>
+		<h2 id="Introduction">1. Introduction</h2>
+		<p>SimpleRTS is an open source project developed by Tim Ernsberger, 
+		Scott Sosnowski, and Feng Cao, under the advisement of Soumya Ray.
+		The purpose of this project is to provide a simple but sophisticated
+		test bench for use in testing AI agents. SimpleRTS
+		is based on <a href="http://stratagus.sourceforge.net/">Stratagus</a>, with units and dynamics based on Blizzard's Warcraft 2,
+		but does not include sophisticated graphics or sound, making it an ideal
+		platform for running large numbers of simulations quickly.  It is also designed to provide more information directly to the agent than might otherwise be available.
+		</p>
+		<h2 id="Revisions">2. Revision History</h2>
+		<h4>x.x.x</h4>
+		<p>This is some version of SimpleRTS. New versions will be published
+		   as bugs are resolved and as additional features are added.
+		</p>
+		<h2 id="Run">3. How to Run</h2>
+		<p>Note: this section describes how to run SimpleRTS from a Jar file. If you wish to
+		   use the source code, you will have to figure that out on your own (Using eclipse may be of great assistance for those with access to the source).
+		   If you wish to run via MATLAB, please refer to the <a href="#Matlab">MATLAB section</a>.
+		</p>
+		<p>Before you run SimpleRTS, you need to decide what you want to run.  The following examples will use
+		agents and maps from both inside and outside the jar.  As a general rule, however, always specify the path to items in the jar as precisely as possible.
+		</p>
+		<h3>Compiling your Agent</h3>
+		<p>To compile your agent, be sure to include the jar in the classpath, via something like this:
+		</p>
+		<code>javac -cp 'SimpleRTS.jar;.' NonJarAgent.java</code>
+		<h3>An Example Command Prompt</h3>
+		<p>
+		Once you have compiled your agent (or if you want to use only the included agents),
+		 you will want to run the program.  This is accomplished via the versatile main method
+		  included.  The following should get you started:
+		</p>
+		<code>java -cp SimpleRTSv3.1.jar edu.cwru.SimpleRTS.Main --config data/midasConfig.xml data/rc_3m5t.xml --agent edu.cwru.SimpleRTS.agent.RCAgent 0 --agent edu.cwru.SimpleRTS.agent.visual.VisualAgent 0 --agentparam false --agentparam true</code>
+		<p>
+		If you have downloaded the repository, to run from the src folder, the above should work with the data/whatever replaced with ../data/whatever
+		</p>
+		<p>This will invoke the main() method in edu.cwru.SimpleRTS.Main. It uses the configuration data in data/midasConfig.xml (which is 1 episode with an economic victory).  It uses the map stored in data/rc_3m5t.xml. It also initializes the agent called SimpleAgent1 with player number 0 (red).
+		It also initializes a visual agent (also with the player number 0), that isn't controllable by you (the first agentparam),
+			and which will give you information if you double click (the second agentparam).
+			Note that the visual agent shares the same player number.  If fog of war were enabled,
+			it would be clear that sharing the same player number gives the visual agent a view of the same player's units.
+		 	Trying to initialize an agent with a playernumber that does not exist in the map will lead to errors.
+		   </p> 
+		<p>Here is a further description of all the options that can be used (Entering in insufficient
+		   or incorrect arguments will cause the program to print out usage info and
+		   terminate):
+		</p>
+		<div><code>--config <i>&lt;XML configuration file&gt;</code></i>
+			<div class="definition">These two arguments specify that you want to import
+			    a configuration and which file to read to get it. This is an optional
+			    parameter. If not specified, the program will use the last configuration
+			    with which it was run or default values if no configuration data has been
+			    provided previously.  More info in <a href="#Config">section 4</a>.
+			</div>
+		</div>
+		<div><code>--agent <i>&lt;agent class&gt; &lt;playernum&gt;</i></code>
+			<div class="definition">Indicates that the agent defined by 
+			    <i>&lt;agent class&gt;</i> should be used in this simulation. The full
+			    path to the class must be specified (e.g. edu.cwru.SimpleRTS.SimpleAgent1).
+			    By default, the program will use a single argument constructor that takes
+			    in an int that represents playernum. The <i>&lt;playernum&gt;</i> parameter 
+			    definies an ID with which the agent will be associated. 
+			    <strong>At least one instance of this option is required.</strong>
+			</div>
+		</div>
+		<div><code>--agentparam <i>&lt;string param&gt;</i></code>
+			<div class="definition">Follows an --agent, allowing complex classes to have additional
+			parameters.  Each is a string.
+			</div>
+		</div>
+		<div><code>--loadfrom <i>&lt;serialized agent file name&gt;</i></code>
+			<div class="definition">This option can only be used immediately following
+			    the previous option. If used, the agent specified by the preceeding 
+			    --agent option will be loaded from the file instead of being constructed.
+			    This option assumes that the data in the file is a serialized representation
+			    of an agent. 			    
+			</div> 
+		</div>
+		<h3>More Examples</h3>
+		<p>Another important agent is the CombatAgent, which is a basic fighting AI.  When the combat agent is controlling them, each unit sits around (or wanders) until an enemy comes into it's sight range, at which point it mindlessly attacks that enemy until one dies.
+		The combat agent takes three additional parameters:
+		<ul>
+			<li>A space separated list of enemy player numbers (for example if this is '--agentparam "0 1 3"', then the Combat agent will attack players 0,1, and 3)</li>
+			<li>A boolean for whether it's units should wander while waiting to see enemies</li>
+			<li>A boolean for whether it should produce verbose output into System.out</li>
+		</ul>
+		</p>
+		<p>
+			Thus, an example trial involving CombatAgent (with a visual agent to watch) could be started like so:
+		<\p>
+		<code>java -cp SimpleRTSv3.1.jar edu.cwru.SimpleRTS.Main --config data/conquestConfig.xml data/com_4f4a2kv4f4a4k.xml --agent edu.cwru.SimpleRTS.agent.CombatAgent 0 --agentparam "1" --agentparam true --agentparam false --agent edu.cwru.SimpleRTS.agent.CombatAgent 1 --agentparam "0" --agentparam true --agentparam false --agent edu.cwru.SimpleRTS.agent.visual.VisualAgent 0 --agentparam false --agentparam true</code>
+		<p>
+			Notice that each specifies the other as its enemy.
+		</p>
+		<h2 id="Config">4. Configuration</h2>
+		<p>The configuration file is used to define victory/termination conditions and set up parameters for the
+		   series of episodes you are running.  It is an XML file that gets loaded into the user-specific
+		   instance of <a href="http://download.oracle.com/javase/6/docs/api/java/util/prefs/Preferences.html">
+		   java.util.Preferences</a>. Basically, the configuration file is a hierarchy of
+		   maps which store primitives as values. For an example of how to write a configuration
+		   file, see <a href="../data.defaultConfig.xml">data/defaultConfig.xml</a>. For an example
+		   of how to define and export preferences in Java code, see 
+		   edu.cwru.SimpleRTS.util.DefaultConfigurationGenerator.java. Here are the values that SimpleRTS
+		   uses and their defaults:
+		</p>
+		<p> Note that with the exception of the time limit, all victory conditions are additive, you must meet all of them to win. 
+		</p>
+		<ul>
+			<li>edu
+				<ul>
+					<li>cwru
+						<ul>
+							<li>SimpleRTS
+								<ul>
+									<li>environment
+										<ul>
+											<li><strong>NumEpisodes</strong> - the number of episodes to run (default 1)</li>
+											<li><strong>EpisodesPerSave</strong> - how often to save the terminal state and agents (default 0, i.e. never), 1 will save every episode, 2 after every other one</li>
+											<li><strong>SaveAgents</strong> - whether to save the agents periodically (only applies if EpisodesPerSave > 0; default false)</li>
+										</ul>
+									</li>
+									<li>model
+										<ul>
+											<li><strong>Conquest</strong> - Military Victory: agents must eliminate all other agents to win (default false)</li>
+											<li><strong>Midas</strong> - Economic Victory: agents must gather RequiredGold and RequiredWood amounts of gold and wood to win (default false)</li>
+											<li><strong>ManifestDestiny</strong> - Building Victory: agents must build specified quantities of units to win (default false)</li>
+											<li><strong>TimeLimit</strong> - agents must complete other goals within this amount of turns to win (default Integer.MAX_VALUE)</li>
+											<li><strong>RequiredGold</strong> - amount of gold required for Midas victory (default 0)</li>
+											<li><strong>RequiredWood</strong> - amount of wood required for Midas victory (default 0)</li>
+											<li><strong>Required <i>unitTemplateName</i> Player <i>playerId</i></strong> - number of instances of <i>unitTemplateName</i> required for the <i>playerId</i>th agent to win by ManifestDestiny (default 0)</li>
+										</ul>	
+								</ul>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<p>You can use the configuration file to define	parameters for your own agent 
+			(e.g. learning rate, discount factor, etc.). Just define your own path, figure out 
+			how to use java.util.Preferences, and put your settings in the configuration file.
+		</p>
+		<p><strong>Note:</strong> preferences do not get cleared out automatically; they are
+			persisted to disk by Java and reloaded for every Java program run by the same
+			user on the same machine. SimpleRTS clears out the properties defined above
+			automatically, but you will have to clear out custom properties yourself.
+		</p>
+		<h2 id="VisualAgent">5. Visual Agent and Game Details</h2>
+		<p>
+		SimpleRTS comes with a visual agent.  This agent allows users to see what is going on and what their agents are doing.  Simply declare a visual agent with the same playernumber as your agent (more info in the How to Run section), and you will be able to see everything that the agent sees.  Once there you will be able to see gold mines (gold squares), trees (tree shaped things), as well as letters in different colors.  The color of these letters represents the player number, while the letter shows what type of unit they are. 
+		</p>
+		<ul>
+			<li>Buildings
+				<ul>
+					<li>H: Town Hall.  This building makes peasants and acts as a drop-off point for resources. It also provides some food, which allows more units to be made.</li>
+					<li>F: Farm. This building provides food to allow more units to be made.</li>
+					<li>B: Barracks.  This building trains troops, including footmen, archers, and knights.</li>
+					<li>L: Blacksmith.  This building makes upgrades, improving the combat effectiveness of the troops.</li>
+				</ul>
+			</li>
+			<li>Units
+				<ul>
+					<li>p: Peasant. The builder and gatherer.  Not an effective combat unit.</li>
+					<li>f: Footman. A basic melee combat unit.</li>
+					<li>a: Archer.  A ranged combat unit, more lethal than the footman, but more deadly.</li>
+					<li>k: Knight.  A heavier armored and more powerful melee combat unit than the footman.</li>
+				</ul>
+			</li>
+		</ul>
+		<p>
+			For more detailed information or to make changes, see data/unit_templates.
+		</p>
+		<h2 id="Agent">6. Writing an Agent</h2>
+		<p>All agents written to interact with SimpleRTS must extend the class
+		    <code>edu.cwru.SimpleRTS.agent.Agent</code>. Consult the javadoc for a
+			description of the methods in Agent. At the very least, you must implement
+			the initialStep(), middleStep(), and terminalStep() methods. These three
+			methods define the logic for the agent to receive a state update and return
+			a mapping of its units to actions for the next step.
+		</p>
+		<p>When making more complicated agents, you may want to add additional arguments.  In order to use more arguments with the existing main method, you must change your agent's constructor to accept a string array.  In particular, the constructor must have exactly two arguments: int player, and String[] everythingelse (which you then parse into whatever).
+		If it does not match this (or just "int playernum"), it will not be loaded by the main method.  In order to pass the arguments in, each is put sequentially as --agentparam x.  More details in the How To Run section.
+		If you do add additional parameters, please override the static String getUsage() to explain their usage, as that will be called if it is used wrong.
+		</p>
+		<h3>Actions</h3>
+		<p>In order to send commands to your units, you must construct a map from the IDs of your units to the actions that you want them to do.
+		Actions may be constructed by calling various static factory methods in <code>edu.cwru.SimpleRTS.action.Action</code>, such as <code>createCompoundAttack</code>.
+		The actions are divided into two groups, primitive actions and compound actions.  The primitive actions represent basic commands to individual units, whereas the compound actions are higher level, requesting a series of primitive actions over the course of several turns as part of a larger command. 
+		There are 14 possible action types, described below:
+		<ul>
+			<li>
+				PRIMITIVEATTACK: This is a TargetedAction, taking as parameters the acting unit's ID and the target's ID.  When executed, it attempts to attack the targeted unit, failing when it out of range.
+			</li>
+			<li>
+				PRIMITIVEGATHER: This is a DirectedAction, taking as parameters the acting unit's ID and a direction to attempt to gather in.  When executed, it looks in the specified direction for a resource node, if there is a node, it moves resources from the node into the unit's inventory.
+			</li>
+			<li>
+				PRIMITIVEDEPOSIT: This is a DirectedAction, taking as parameters the acting unit's ID and a direction to attempt to deposit in.  When executed, it looks in the specified direction for a town hall, if there is a town hall that you control, it moves resources from the unit's inventory and gives them to you.
+			</li>
+			<li>
+				PRIMITIVEMOVE: This is a DirectedAction, taking as parameters the acting unit's ID and a direction to attempt to move.  When executed, it attempts to move in that direction, failing if another unit is already there.
+			</li>
+			<li>
+				PRIMITIVEBUILD: This is a ProductionAction, taking as parameters the acting unit's ID and the ID of the template of the building that you are trying to build.  When executed, it does one turn's work toward building that kind of building on the spot the unit is at.  As all buildings take one turn to build, this is enough to complete it, making a building on the spot and moving the builder off to one side.
+			</li>
+			<li>
+				PRIMITIVEPRODUCE: This is a ProductionAction, taking as parameters the acting unit's ID and the ID of the template of the unit or upgrade that you are trying to build.  When executed, it does one turn's work toward the creation of the unit or upgrade specified.  As all units and upgrades take one turn to make, this is enough to complete it.  If it is a unit being made, the new unit is put to one side after being made.
+			</li>
+			<li>
+				COMPOUNDATTACK: This is a TargetedAction, taking as parameters the acting unit's ID and the target's ID.  When executed, it moves into range of a unit, then attacks it once.
+			</li>
+			<li>
+				COMPOUNDGATHER: This is a TargetedAction, taking as parameters the acting unit's ID and the ID of a resource node to gather from.  When executed, it does PRIMITIVEMOVEs until next to the specified node, then performs a PRIMITIVEGATHER on it.
+			</li>
+			<li>
+				COMPOUNDDEPOSIT: This is a TargetedAction, taking as parameters the acting unit's ID and the ID of a town hall to deposit at.  When executed, it does PRIMITIVEMOVEs until next to the specified town hall, then performs a PRIMITIVEDEPOSIT on it.
+			</li>
+			<li>
+				COMPOUNDMOVE: This is a LocatedAction, taking as parameters the acting unit's ID and the x and y coordinates of where to move.  When executed, it does PRIMITIVEMOVEs to reach that location.
+			</li>
+			<li>
+				COMPOUNDBUILD: This is a LocatedProductionAction, taking as parameters the acting unit's ID and the ID of the template of the building that you are trying to build, as well as x and y coordinates of where to build it.  When executed, it uses repeated PRIMITIVEMOVEs to reach the specified location, then does PRIMITIVEBUILD until the building is done. 
+			</li>
+			<li>
+				COMPOUNDPRODUCE: This is a ProductionAction, taking as parameters the acting unit's ID and the ID of the template of the unit or upgrade that you are trying to build.  When executed, it does PRIMITIVEPRODUCE until the unit or upgrade is completed.
+			</li>
+			<li>
+				FAILED and FAILEDPERMANENTLY: These are internal actions used by the planner in executing the compound actions.
+			</li>
+		</ul>		
+		</p>
+		<h2 id="MapEditor">7. Making your own Map</h2>
+		<p>
+		SimpleRTS is also equipped with a map editor, located in <code>edu.cwru.SimpleRTS.agent.visual.editor.Editor</code>.  It has a main method and is therefore executable.  Once you run it, you will find you can add players, place units, place resource nodes, and toggle the status of fog of war and whether resources are revealed through the EventLogger (more info on the latter two <a href="#FogofWar">here</a>). 
+		</p>
+		<h2 id="Agent">8. Using the Scripted Agent</h2>
+		<p>The scripted agent may be found at <code>edu.cwru.SimpleRTS.agent.ScriptedGoalAgent</code>.
+			It's constructor requires a BufferedReader, which may be connected to a file, the standard in, or a string (via calling <code>java.io.BufferedReader</code>'s constructor with an argument of a <code>java.io.FileReader</code>, <code>java.io.InputStreamReader</code>, or <code>java.io.StringReader</code>, respectively).
+			The input must be in the form of a series of commands separated by new lines.
+			The commands are executed sequentially, with execution waiting on any command 
+			whose preconditions are not met.  If multiple commands can be executed during
+			the same time step, they will be.  Commands may be suffixed by // followed by 
+			a comment, but there should be no spaces before the //.	The command sequence
+			 may be terminated with a line saying containing only "END" (but not including
+			 the quotation marks).  This is not necessary unless the command sequence comes
+			  from standard in.
+			<br> <br>
+			The script may take actions of Transfer, Build, Produce, Wait, and Attack.  These 
+			commands are put in with their arguments separated by colons. <br>
+			Transfer changes the jobs of a selected number of peasants from one selected task to
+			another selected task. The tasks available are Wood, Gold, and Idle<br>
+			As an example, "Transfer:1:Idle:Gold" takes 1 peasant and reassigns it to gold mining.
+			<br>
+			Build uses an idle peasant to build a selected building type in roughly a selected 
+			position.  This position is relative to the average position of units at the start
+			of each episode.  If that position is occupied, it will find the closest unoccupied
+			position and build there.  If no peasant that can build the building is idle and not
+			doing other building, then the command will not be executed until there is one, so it is
+			advised that Transfer be used first to make a peasant idle.<br>
+			As an example, "Build:Farm:-2:2" builds a farm at a position offset from the starting point
+			by -2 in the x direction and +2 in the y direction.<br>
+			<br>
+			Produce uses a building able to produce a selected unit type.  If no building is both capable
+			of producing that unit and is not already producing something, then the command will not be executed
+			until one is available.<br>
+			As an example, "Produce:Peasant" orders that a town hall make a peasant. <br>
+			<br>
+			Wait allows execution to wait a selected resources reaches a selected amount.  While
+			Produce and Build do this automatically, it can be useful to wait until resources accrue
+			before Transferring a peasant from that resource to Idle, so that it can be used to build. <br>
+			As an example, "Wait:Gold:400" waits until you have a total of 400 gold.<br>
+			<br>
+			Attack sends all military units to attack the enemy.  The attack walks toward the enemy town hall 
+			(or lacking a town hall, some other enemy unit) and attacks that gets in range on the way. Attack:All
+			does the same thing with everything, including peasants. 
+			As an example, "Attack" attacks with military units, "Attack:All" does the same with every unit.<br>
+			<br>
+			Note on usage: Many commands have preconditions that are difficult to satisfy, so take
+			care choosing commands in your script and note that the scripted agent is not robust in
+			the face of interference (such as destroying production buildings).<br>
+			<br>
+			Finally, as a full example of a working script:<br>
+			Build:TownHall:0:0//use your starting peasant to build a town hall<br>
+			Transfer:1:Idle:Gold//make the builder gather gold<br>
+			Wait:Gold:500//wait until you have enough gold for a farm<br>
+			Transfer:1:Gold:Wood//make him gather wood<br>
+			Wait:Wood:250//until you have enough wood too<br>
+			Transfer:1:Wood:Idle//then free him up<br>
+			Build:Farm:-2:2//make him build a farm<br>
+			Transfer:1:Idle:Gold//make him go back to gold<br>
+			Produce:Peasant//make a peasant when you can<br>
+			Transfer:1:Idle:Wood//and put the new guy on woodcutting<br>
+			Produce:Peasant//make another peasant when you can<br>
+			Transfer:1:Idle:Gold//and put the new guy on gold<br>
+			Produce:Peasant//and make another<br>
+			Transfer:1:Idle:Gold//and put that one on gold too<br>
+			Wait:Wood:400//when you have enough wood for a barracks<br>
+			Transfer:1:Wood:Idle//free up the woodcutter to build<br>
+			Build:Barracks:2:-2//build a barracks<br>
+			Transfer:1:Idle:Gold//make the builder go to gold<br>
+			Produce:Footman//make a footman<br>
+			Attack:All<br>
+			
+		</p>
+		<h2 id="Engine">9. The Engine</h2>
+		<p>The top level of the engine is the <code>edu.cwru.SimpleRTS.environment.Environment</code>.  The Environment interacts with the agents through immutable methods within the abstract class <code>edu.cwru.SimpleRTS.agent.Agent</code>.  Environment provides the Agent with states, then receives actions back. 
+		</p>
+		<p>
+		The Environment verifies the orders and passes them on to the Model.  Model is the center of the interpretation of orders.  As implemented in SimpleModel, it takes in all of the orders.  Any compound actions are processed within SimplePlanner, which calculates pathing and breaks down the compound commands into a series of primitive ones.  The primitive commands making up compound commands are queued, and recalculated upon failure.  Thus, a compound command need not be reissued, although in some cases (long moves across a crowded area that became less crowded during the course of the movement) it may result in slightly better pathing.  There is presently no direct way of definitively determining that an action has been completed successfully or not, but the task of a unit being idle may be an alternative to checking postconditions manually. Actions are then executed, leaving effects in the State.
+		</p>
+		<p>
+		The State and other items accessible from the state collectively store virtually all information about the world and what has happened.
+		Information accessible from the state includes resources amounts, resource nodes, units, and logs of important events.
+		Most information is accessed through IDs, which can also be found in State.
+		The State is accessed by agents through the StateView class, which is a read-only version of the state, giving read-only versions of some of its components as well.
+		</p>
+		<p>
+		Accessed through State, other important classes include:<br>
+		Unit, which stores information about where a unit is, how healthy it is, what it is carrying, et cetera.<br>
+		UnitTemplate, which stores key information about a unit type, like range, attack, armor, whether it can build things, etc.  It can be accessed from a unit of that type (with getTemplate/getTemplateView or from State via it's name and the player)<br>
+		</p>
+		<p> Action is used to convey commands between the agent and the simulation.  There are several subclasses, to prevent mistakes, they should be constructed using the static factory-style methods in Action itself.  Actions are divided into compound and primitive types.  Primitive types are the basic building blocks, like taking a step in one direction, gathering from an adjacent resource, or attacking a guy in range.  Compound actions are more goal based and are resolved by the simulator itself into the primitives needed to fulfill that goal.  As a result, compound actions are more robust, being self correcting to a point.  
+		</p>
+		<h2 id="FogofWar">10. Partial Observability</h2>
+		<p>SimpleRTS implements partial observability through the common RTS element of "fog of war".  Fog of war may be activated as part of the map creation process.  With the fog of war activated, many interactions change.
+		In particular, it is no longer possible to access units or resource nodes found outside of the sight radius of your units, events occurring entirely outside of your sight radius are no longer available to you, and it is no longer possible to query the state to get the templates and resource values of any agent but yourself.
+		The challenge of finding resource nodes may be partially compensated for if "revealed resources" is toggled on (which is accomplished in much the same way as with fog of war itself).  With this toggled on, the EventLogger will tell you the location and type of all resources via getRevealedResources().  Beware though, as it only logs the appearance of resources, some other player (or even you) may have mined out or cut down the resource in the meantime.  
+		</p>
+		<h2 id="Matlab">MATLAB Specific Instructions</h2>
+		<p>Be aware that SimpleRTS works only under Matlab of Windows 7 environment, and doesn't work under Matlab of Unix/Linux/Mac OS X environment.
+		</p>
+		<p>It is recommended that those with any Java experience, and even those without any, just use the Java version instead of this more cumbersome MATLAB interface.
+		</p>
+		<h3>Running the Sample Code</h3>
+			<p>To test the matlab_script from the folder data/matlab_script, simply run test_SimpleRTS in matlab.<br>
+			This will call the main function in edu.cwru.SimpleRTS.Main, passing proper arguments.  This, in turn, calls the edu.cwru.SimpleRTS.agent.MatlabAgent.
+			</p>
+		<h3>Writing your own MATLAB Agent</h3>
+		<p>In order to write your own Agent with matlab, you must implements the following four functions, using names exactly as written:
+			<ul>
+				<li>1. agent_init -- will be called only once when MatlabAgent was created</li>
+				<li>2. agent_initialStep -- will be called at first step of the episode.</li>
+				<li>3. agent_middleStep -- called at each step of the episode (non-first, non-terminal step)</li>
+				<li>4. agent_terminalStep -- called at the terminal step of the episode</li>
+			</ul>
+		</p>
+		<h2 id="Contact">12. Contact Info</h2>
+		<p>For questions about running simulations, contact Tim Ernsberger at 
+			<a href="maito:tse6@case.edu">tse6@case.edu</a>.
+		</p>
+		<p>For questions about game mechanics, contact Scott Sosnowski at
+			<a href="mailto:sts12@case.edu">sts12@case.edu</a>.
+		</p>
+		<p>For questions about the Matlab interface, contact
+			Feng Cao at <a href="mailto:fxc100@case.edu">fxc100@case.edu</a>.
+		</p>
+	</body>
+</html>
