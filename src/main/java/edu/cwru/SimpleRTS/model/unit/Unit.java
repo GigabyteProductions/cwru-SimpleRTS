@@ -90,7 +90,6 @@ public class Unit extends Target implements Cloneable {
 	/**
 	 * 
 	 * @param amount
-	 * @return
 	 */
 	public void takeDamage(int amount)
 	{
@@ -118,7 +117,6 @@ public class Unit extends Target implements Cloneable {
 	}
 	/**
 	 * Increment production amount
-	 * @param templateID
 	 */
 	public void incrementProduction(@SuppressWarnings("rawtypes") Template toproduce, StateView state) {
 		//check if it is even capable of producing the

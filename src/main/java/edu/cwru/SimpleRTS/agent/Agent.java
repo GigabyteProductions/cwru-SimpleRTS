@@ -135,14 +135,12 @@ public abstract class Agent implements Serializable {
 	/**
 	 * Accept the initial state of an episode
 	 * @param newstate The new state of the system
-	 * @param onofflatch A countdown latch used to synchonize completion
 	 */
 	public abstract Map<Integer,Action> initialStep(State.StateView newstate);
 
 	/**
 	 * Accept an intermediate state of an episode
 	 * @param newstate The new state of the system
-	 * @param onofflatch A countdown latch used to synchonize completion
 	 */
 	public abstract Map<Integer,Action> middleStep(State.StateView newstate);
 	/**

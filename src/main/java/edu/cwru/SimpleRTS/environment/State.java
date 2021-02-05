@@ -1254,7 +1254,6 @@ public class State implements Serializable, Cloneable, IDDistributer {
 		/**
 		 * Get the amount of wood or gold (specified by the type) available to a specific player.
 		 * If you are not an observer, it will not work on other people.
-		 * @param player
 		 * @param type The type of resource
 		 * @return
 		 */
@@ -1267,7 +1266,6 @@ public class State implements Serializable, Cloneable, IDDistributer {
 		/**
 		 * Get the amount of supply (food) used by a specific player.
 		 * If you are not an observer, it will not work on other people.
-		 * @param player
 		 * @return
 		 */
 		public Integer getSupplyAmount(int playerid) {
@@ -1278,7 +1276,6 @@ public class State implements Serializable, Cloneable, IDDistributer {
 		/**
 		 * Get the maximum amount of supply (food) available to a specific player.
 		 * If you are not an observer, it will not work on other people.
-		 * @param player
 		 * @return
 		 */
 		public Integer getSupplyCap(int playerid) {
@@ -1313,8 +1310,6 @@ public class State implements Serializable, Cloneable, IDDistributer {
 		/**
 		 * Get whether a player has a unit of a certain type.  (Say, a tech building).
 		 * If you are not an observer, then this will not work on other players
-		 * @param player
-		 * @param buildingtemplateid
 		 * @return Whether the player with id playerid has a unit with a template with the template id templateid, or false if the player is not you
 		 */
 		public boolean doesPlayerHaveUnit(int playerid, int templateid) {
