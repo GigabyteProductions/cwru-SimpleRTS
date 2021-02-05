@@ -44,6 +44,7 @@
 </xs:complexType>
 <xs:complexType name="Unit">
 	<xs:all>
+		<xs:element name="ID" type="xs:int"/>
 		<xs:element name="currentHealth" type="xs:int"/>
 		<xs:element name="xPosition" type="xs:int"/>
 		<xs:element name="yPosition" type="xs:int"/>
@@ -73,6 +74,7 @@
 </xs:complexType>
 <xs:complexType name="ResourceNode">
 	<xs:sequence>
+		<xs:element name="ID" type="xs:int"/>
 		<xs:element name="type" type="ResourceNodeType"/>
 		<xs:element name="xPosition" type="xs:int"/>
 		<xs:element name="yPosition" type="xs:int"/>
